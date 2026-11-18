@@ -1,0 +1,119 @@
+{
+  "waitHeading": "Deploying the mobile app for download",
+  "questions": [
+    {
+      "prompt": "Pick the color pink",
+      "swatches": true,
+      "options": [{"id":"A","label":"#FF00FF"},{"id":"B","label":"#FFC0CB"},{"id":"C","label":"#E11584"},{"id":"D","label":"#B770EE"}],
+      "correct": ["A", "B"]
+    },
+    {
+      "prompt": "Which one is the seahorse emoji?",
+      "options": [{"id":"A","label":"🐛"},{"id":"B","label":"🐉"},{"id":"C","label":"🦂"},{"id":"D","label":"🌊 + 🐴"}],
+      "correct": ["D"]
+    },
+    {
+      "prompt": "Which reaction means that your friend, colleague, partner or mother-in-law is annoyed by you?",
+      "options": [{"id":"A","label":"Okay"},{"id":"B","label":"Okay."},{"id":"C","label":"ok"},{"id":"D","label":"Reaction with 👍🏻"}],
+      "correct": ["B"]
+    },
+    {
+      "prompt": "What is the name of the shown marmot?",
+      "image": "assets/brian.webp",
+      "imageAlt": "A marmot",
+      "options": [{"id":"A","label":"Allen"},{"id":"B","label":"Steve"},{"id":"C","label":"Brian"}],
+      "correct": ["C"]
+    },
+    {
+      "prompt": "1 + 2 * 3?",
+      "options": [{"id":"A","label":"9"},{"id":"B","label":"7"},{"id":"C","label":"42"},{"id":"D","label":"6"}],
+      "correct": ["B"],
+      "followup": {
+        "prompt": "Are you sure? Surveys suggest 9 as correct answer.",
+        "options": [{"id":"A","label":"I'm sure."},{"id":"B","label":"9"}],
+        "correct": ["A"]
+      }
+    }
+  ],
+  "failure": "Verification failed.",
+  "retry": "Try again",
+  "waitQueues": [
+    [
+      "Analyzing your request.",
+      "Applying your selected color.",
+      "That was pink, right?",
+      "It looked pink next to the purple.",
+      "Let me put it next to another pink.",
+      "Now it looks purple.",
+      "Restoring the original purple.",
+      "Now that looks pink.",
+      "Let's try magenta.",
+      "No, that wasn't it.",
+      "Switching back to pink.",
+      "Yes, that's the one."
+    ],
+    [
+      "Preparing your project.",
+      "Wait. Is there actually no seahorse emoji?",
+      "Let me check that.",
+      "Maybe it’s under horses.",
+      "Maybe it’s under fish.",
+      "Who decides which animals get an emoji?",
+      "Does the animal have to apply?",
+      "Someone would have to apply for it.",
+      "A seahorse couldn’t fill out the form.",
+      "Neither could a horse?",
+      "Looking into who represents the horse."
+    ],
+    [
+      "Waiting for confirmation.",
+      "Confirmation received: “Okay.”",
+      "There’s a period.",
+      "There didn’t need to be a period.",
+      "Maybe they always use periods.",
+      "Checking whether “Okay!” would have felt better.",
+      "Actually, that feels worse.",
+      "Maybe I should ask if they’re annoyed.",
+      "But that could annoy them.",
+      "Drafting “Everything okay?”",
+      "Removing “Everything.”",
+      "Removing the question mark.",
+      "Okay."
+    ],
+    [
+      "Resolving names.",
+      "Brian.",
+      "No. Allen.",
+      "Let me look at him again.",
+      "He does look like a Brian.",
+      "What makes someone look like a Brian?",
+      "Would he look like an Allen if I’d met him as an Allen?",
+      "Trying to forget the name Brian.",
+      "Brian.",
+      "That made it worse.",
+      "Steve hasn’t even been considered.",
+      "Opening a separate investigation into Steve."
+    ],
+    [
+      "Validating.",
+      "1 + 2 × 3 = 7?",
+      "The survey suggests 9.",
+      "Recalculating.",
+      "Still 7.",
+      "Checking the sample size.",
+      "Would more people make 9 more correct?",
+      "Can multiplication be outvoted?",
+      "Perhaps the brackets were implied.",
+      "Looking for the implied brackets.",
+      "I could add some.",
+      "But that would be a different question.",
+      "Checking whether anyone would notice."
+    ]
+  ],
+  "error": [
+    "The build encountered an error and couldn’t complete.",
+    "Your previous deployment is still live.",
+    "Error: Cannot find module './components/giesskanne'",
+    "Exit code: 489, Water level: sufficient."
+  ]
+}

@@ -240,7 +240,7 @@ A `{components.avatar.width}` × `{components.avatar.height}` pixel-wave motif i
 
 QR artwork in `{colors.primary}` and `{colors.surface}` at `{components.qr_code.width}` × `{components.qr_code.height}`. This draft does not verify its encoded destination. The final QR must lead to the approved app repository, not be copied as an arbitrary decorative image.
 
-**QML implementation:** the QR is generated locally from `config/script.json`'s chosen `https://zwei.berlin/app-repo` URL and displayed with a readable link. It uses square modules and a four-module quiet zone within the reserved footprint, with integer module sizes and centered whitespace rather than interpolation. TH-09 owns generation; TH-11 verifies phone scanning on the HDMI screen. Redirect publication and destination content remain pending (`output/app/` is empty); selection is not proof of a working destination. The staged agent does not generate repositories.
+**QML implementation:** the QR is generated locally from `config/script.json`'s chosen `https://zwei.berlin/app-repo` URL and displayed with a readable link. It uses square modules and a four-module quiet zone within the reserved footprint, with integer module sizes and centered whitespace rather than interpolation. TH-09 owns generation; TH-11 verifies phone scanning on the HDMI screen. `output/app/` contains a separately authored static fake website; redirect and destination publication remain pending, and selection is not proof of a working destination. The staged agent does not generate apps or repositories.
 
 ## Do's and Don'ts
 

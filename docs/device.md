@@ -141,7 +141,7 @@ rfkill list
 
 On an image managed by NetworkManager, `sudo nmcli radio wifi off` is an alternative Wi-Fi-only control; do not assume `nmcli` is installed. Never use `rfkill block all`, `rfkill unblock all`, `dtoverlay=disable-bt` or a Bluetooth service stop. Confirm Bluetooth remains unblocked and connected and repeat the app/keyboard trial with no network, including after reboot. Record persistence of the chosen Wi-Fi policy rather than assuming it. Re-enable Wi-Fi only during maintenance with `sudo rfkill unblock wifi` (or the corresponding NetworkManager setting).
 
-External dependencies are needed to obtain the OS/packages/project and during maintenance, **not for the exhibition interaction**: local fonts, images, JSON content and Segno QR generation stay offline; no AI/API/web server is involved. A visitor's phone needs connectivity to open `https://zwei.berlin/app-repo`. The owner-provided redirect is **not configured yet**, so URL destination/phone acceptance remains blocked even if the local QR renders.
+External dependencies are needed to obtain the OS/packages/project and during maintenance, **not for the exhibition interaction**: local fonts, images, JSON content, the bundled default QR and Segno generation for custom URLs stay offline; no AI/API/web server is involved. A visitor's phone needs connectivity to open `https://thirsty-app.netlify.app/`. Destination availability and phone acceptance remain unverified even if the local QR renders.
 
 ## Sensor electrical gate and unresolved pin map
 
@@ -180,6 +180,6 @@ Leave unknown values empty/null in the device record, not guessed. Store the act
 | Wi-Fi off/Bluetooth on; offline startup and typing after reboot                  | Not tested                                                                         |
 | Idle, active typing, scrolling and completion memory/swap                        | Not measured; collect process RSS/high-water/swap plus system free/swap over time  |
 | Long-run no OOM, no sustained swapping, stable responsiveness                    | Not tested; inventory alone is insufficient on 512 MB                              |
-| Final URL redirect and phone QR scan from HDMI                                   | Owner redirect unconfigured; physical scan not tested                              |
+| Final URL destination and phone QR scan from HDMI                                 | Destination availability unverified; physical scan not tested                      |
 
 For memory acceptance, take separate preflight records with the actual app PID at stable Start, while typing synthetic text, during long transcript scrolling and after reset; repeat over time and include the compositor's PID separately for Wayland. `free`/`vmstat`/`swapon` are snapshots, not proof of no sustained swapping. Observe responsiveness and consult kernel OOM/power diagnostics during maintenance without collecting visitor session text. `vcgencmd get_throttled` contains current and historical flags; use [Raspberry Pi's documented meanings](https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd) and do not clear/reboot away evidence before recording it. Persistent throttling, OOM, sustained swapping, missing plugins, wrong layout, blanking or reconnect failure block deployment rather than being hidden with larger swap or a silent graphics fallback.

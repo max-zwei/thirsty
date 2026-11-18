@@ -1,0 +1,196 @@
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("assets/JetBrainsMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("assets/JetBrainsMono-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  padding: 96px;
+}
+
+main {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+
+button {
+  appearance: none;
+  width: 100%;
+  min-height: 62px;
+  border: 2px solid #000000;
+  border-radius: 0;
+  padding: 16px;
+  color: #000000;
+  background: #FF00FF;
+  font: inherit;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.options button {
+  background: #FFFFFF;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .options button:hover {
+    border-width: 4px;
+    padding: 14px;
+  }
+}
+
+.options button:active {
+  border-width: 4px;
+  padding: 14px;
+}
+
+button:focus-visible {
+  outline: 2px solid #FF00FF;
+  outline-offset: 4px;
+}
+
+p:focus {
+  outline: none;
+}
+
+.swatch {
+  min-height: 96px;
+}
+
+.marmot {
+  display: block;
+  max-width: 100%;
+  width: 320px;
+  max-height: 320px;
+  object-fit: contain;
+  margin-top: 16px;
+}
+
+.wait {
+  font-style: italic;
+  font-size: 14px;
+}
+
+.wait-screen {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.wait-heading {
+  grid-column: 1 / -1;
+}
+
+.loading-indicator {
+  margin-top: 1.6px;
+}
+
+.loading-indicator rect {
+  animation: loading-cell 800ms steps(1, end) infinite;
+}
+
+@keyframes loading-cell {
+  0%, 100% { fill: #000000; }
+  37.5% { fill: #E1E1E1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-indicator rect {
+    animation: none;
+  }
+}
+
+.error {
+  color: #FF0000;
+  font-size: 20px;
+  line-height: normal;
+}
+
+.error-screen {
+  display: grid;
+  gap: 16px;
+}
+
+.module-error {
+  border: 2px solid #000000;
+  padding: 16px;
+  background: #FFFFFF;
+}
+
+.exit-code {
+  font-size: 14px;
+}
+
+.retry {
+  margin-top: 40px;
+  width: auto;
+}
+
+@media (max-width: 720px) {
+  body {
+    padding: max(40px, env(safe-area-inset-top))
+      max(16px, env(safe-area-inset-right))
+      max(40px, env(safe-area-inset-bottom))
+      max(16px, env(safe-area-inset-left));
+  }
+
+  .options {
+    margin-top: 16px;
+  }
+
+  .marmot {
+    width: min(320px, 32svh);
+  }
+
+  .marmot + .options:not(.swatches) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .options:not(.swatches) {
+    grid-template-columns: 1fr;
+  }
+}

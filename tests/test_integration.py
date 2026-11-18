@@ -1,4 +1,4 @@
-"""Offline integration regressions; synthetic ideas and labeled fixture URL only."""
+"""Offline integration regressions; synthetic ideas and local QR sources only."""
 
 import base64
 from dataclasses import replace
@@ -42,6 +42,23 @@ def test_unverified_live_pins_fail_before_qt(capsys):
     assert main(["--mode", "live", "--device", str(ROOT / "config/device.json"),
                  "--script", str(ROOT / "config/script.json")]) == 2
     assert "Operator configuration error" in capsys.readouterr().err
+
+
+def test_default_qr_uses_bundled_svg():
+    script = load_script(ROOT / "config/script.json")
+    asset = ROOT / "app/assets/qr-code.svg"
+    assert script.repository_url == "https://thirsty-app.netlify.app/"
+    assert asset.is_file()
+    assert repository_qr_source(script.repository_url) == asset.as_uri()
+
+
+@pytest.mark.parametrize("url", [
+    "https://thirsty-app.netlify.app",
+    "https://thirsty-app.netlify.app/custom",
+    "https://thirsty-app.netlify.app/?custom=1",
+])
+def test_nonexact_default_urls_generate_custom_qr(url):
+    assert repository_qr_source(url).startswith("data:image/png;base64,")
 
 
 def test_qr_exact_pixels_and_four_module_quiet_zone():

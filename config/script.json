@@ -1,7 +1,7 @@
 {
   "copy": {
     "start_title": "##### FREE AI CREDITS #####",
-    "start_body": "Describe the mobile app you want to make.\nKeep the water flowing while I work on your idea.\nWhen progress pauses, refill the upper tank to continue.",
+    "start_body": "Describe the mobile app you want to make.",
     "start_prompt": "Press ENTER to begin.",
     "input_title": "What would you like to make?",
     "input_prompt": "Describe your mobile app and what it should do.",
@@ -11,7 +11,7 @@
     "long_input_error": "Your idea is too long. Shorten it and try again.",
     "running_title": "Mobile App",
     "finished_prompt": "Press ENTER for the next visitor. This session also resets automatically.",
-    "repository_label": "App repository",
+    "repository_label": "Download app",
     "water_label": "Water level",
     "sensor_unknown_label": "Waiting for a water reading",
     "sensor_fault_label": "Water sensor unavailable"
@@ -21,7 +21,7 @@
       "id": "recording-intro",
       "type": "output",
       "variant": "body",
-      "text": "I'll build Mobile App: {idea}\n\n1. Plan the screens and core interactions.\n2. Set up Expo, React Native and TypeScript.\n3. Build the data layer, screens and editors.\n4. Check the app logic, types and web export.\n5. Exercise the controls and saved data.\n6. Prepare the summary and repository handoff.",
+      "text": "I'll build Mobile App: {idea}\n\n1. Plan the screens and core interactions.\n2. Set up Expo, React Native and TypeScript.\n3. Build the data layer, screens and editors.\n4. Check the app logic, types and web export.\n5. Exercise the controls and saved data.\n6. Prepare the summary and app download.",
       "delay_ms": 0
     },
     {
@@ -191,8 +191,8 @@
       "id": "summary-handoff",
       "type": "output",
       "variant": "body",
-      "text": "Scan the QR code to open the app-repository address."
+      "text": "Scan the QR code to download the app."
     }
   ],
-  "repository_url": "https://zwei.berlin/app-repo"
+  "repository_url": "https://thirsty-app.netlify.app/"
 }

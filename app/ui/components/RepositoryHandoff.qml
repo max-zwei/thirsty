@@ -21,10 +21,9 @@ Item {
             width: Theme.componentsQrCodeWidth
             height: Theme.componentsQrCodeHeight
             source: root.qrSource
-            // Integration produces an exact 208px raster with integer modules,
-            // centered whitespace and a four-module quiet zone. Pad preserves
-            // those pixels; this component never crops, stretches or regenerates.
-            fillMode: Image.Pad
+            // Fit the supplied SVG without cropping; custom 208px rasters retain
+            // their integer modules and quiet zone at the native footprint.
+            fillMode: Image.PreserveAspectFit
             smooth: false
             mipmap: false
             Accessible.role: Accessible.Graphic
