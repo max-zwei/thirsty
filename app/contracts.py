@@ -17,7 +17,7 @@ Slots: start(), submit(text: str), reset(), activity(), receiveReading(object),
        call tick(); they never sleep. At coincident deadlines, sensing validity
        and interruptions MUST be checked before progress/completion.
 Properties (with individual <property>Changed notify signals):
-    state: str; waterLevel: QVariant (int 0..5 or None); sensorStatus: str;
+    state: str; waterLevel: QVariant (int 0..4 or None); sensorStatus: str;
     transcript: QAbstractListModel (constant); idea: str; validationError: str;
     copy: QVariantMap (constant); repositoryUrl: str (constant);
     qrSource: str (notify qrSourceChanged).
@@ -60,7 +60,7 @@ from enum import Enum
 import math
 from typing import Literal, TypeAlias
 
-RawBits: TypeAlias = tuple[int, int, int, int, int]
+RawBits: TypeAlias = tuple[int, int, int, int]
 SensorStatus: TypeAlias = Literal["unknown", "ok", "fault"]
 SessionState: TypeAlias = Literal[
     "start", "input", "running", "paused_water", "paused_sensor", "finished"
@@ -68,7 +68,7 @@ SessionState: TypeAlias = Literal[
 MessageType: TypeAlias = Literal["task", "action", "error", "output", "user"]
 MessageVariant: TypeAlias = Literal["H1", "body", "running", "error", "water_level"]
 
-SENSOR_COUNT = 5
+SENSOR_COUNT = 4
 TRANSCRIPT_ROLES = ("id", "type", "variant", "text")
 MESSAGE_VARIANTS: dict[str, frozenset[str]] = {
     "task": frozenset({"H1", "body"}),
@@ -98,11 +98,11 @@ class SensorReading:
             or len(self.raw_bits) != SENSOR_COUNT
             or any(type(bit) is not int or bit not in (0, 1) for bit in self.raw_bits)
         ):
-            raise ValueError("raw_bits must be a bottom-to-top tuple of five 0/1 integers or None")
+            raise ValueError("raw_bits must be a bottom-to-top tuple of four 0/1 integers or None")
         if self.status not in ("unknown", "ok", "fault"):
             raise ValueError("status must be unknown, ok or fault")
-        if self.level is not None and (type(self.level) is not int or not 0 <= self.level <= 5):
-            raise ValueError("level must be an integer from 0 through 5 or None")
+        if self.level is not None and (type(self.level) is not int or not 0 <= self.level <= SENSOR_COUNT):
+            raise ValueError("level must be an integer from 0 through 4 or None")
         if (self.status == "ok") != (self.level is not None):
             raise ValueError("only status=ok may provide a level; ok requires a level")
         if self.sampled_at is not None and (

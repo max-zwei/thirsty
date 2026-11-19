@@ -10,9 +10,9 @@
 
 | Layer        | Decision                                                                                                                                       |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hardware     | Raspberry Pi 3 Model A+, 512 MB RAM; HDMI screen; Bluetooth keyboard; five JO-GL534 switches                                                   |
-| OS           | Raspberry Pi OS Lite, 32-bit; use packaged dependencies; record the tested OS image and package versions                                       |
-| Runtime      | Python 3; one application process; one Qt event loop                                                                                           |
+| Hardware     | Raspberry Pi 3 Model A+, 512 MB RAM; HDMI screen; Bluetooth keyboard; four JO-GL534 switches                                                   |
+| OS           | Raspberry Pi OS Lite Trixie, 64-bit arm64; use packaged dependencies; record the tested OS image and package versions                          |
+| Runtime      | 64-bit system Python 3; one application process; one Qt event loop                                                                            |
 | Interface    | PySide6 / Qt Quick / QML; custom components; local fonts and assets                                                                            |
 | Display      | Prefer Qt EGLFS/KMS fullscreen; verify packaged support in TH-02; fallback: minimal Wayland kiosk session if required, record the chosen route |
 | GPIO         | GPIO Zero; digital inputs with pull-downs; select the working packaged pin backend in TH-02                                                    |
@@ -37,7 +37,7 @@ All paths below are implemented and relative to this directory. The contracts ar
 | Path                                                                 | Responsibility / contract                                                                                                  | Owner issue                                                 |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `app/main.py`, `app/contracts.py`, `app/config.py`, `pyproject.toml` | Entry point; shared types; validated settings and script loading                                                           | TH-01; entry point integration later owned by TH-09         |
-| `app/sensors.py`                                                     | `SensorReading(raw_bits, level, status, sampled_at)`; `level`: 0–5 or null; `status`: unknown / ok / fault                 | TH-03                                                       |
+| `app/sensors.py`                                                     | `SensorReading(raw_bits, level, status, sampled_at)`; `level`: 0–4 or null; `status`: unknown / ok / fault                 | TH-03                                                       |
 | `app/controller.py`                                                  | `state`, `waterLevel`, `sensorStatus`, transcript model; `start()`, `submit(text)`, `reset()`; Qt properties/signals/slots | TH-06                                                       |
 | `app/ui/Theme.qml`, `app/ui/components/`, `app/assets/`              | DESIGN tokens, message variants, water grid, controls, fonts, avatar                                                       | TH-04                                                       |
 | `app/ui/Main.qml`, `app/ui/screens/`                                 | Start, Input, Running; bind to controller contract                                                                         | TH-07                                                       |
@@ -49,7 +49,7 @@ All paths below are implemented and relative to this directory. The contracts ar
 
 Shared data:
 
-- `raw_bits`: latest five physical 0/1 inputs, ordered bottom → top; null until readable. `level` derives from the stabilized pattern. `sampled_at`: monotonic time of the last successful raw read.
+- `raw_bits`: latest four physical 0/1 inputs, ordered bottom → top; null until readable. `level` derives from the stabilized pattern. `sampled_at`: monotonic time of the last successful raw read.
 - Emit a reading/heartbeat on every poll, even when unchanged; only changed level/status affects the UI. Stale detection must not treat steady water as a disconnected sensor.
 - `wet[i] = (raw_bits[i] == wet_value[i])`; polarity is configurable per switch.
 - Transcript row: `id`, `type`, `variant`, `text`; use DESIGN's task/action/error/output variants. Display visitor text as plain text.
@@ -91,22 +91,21 @@ Shared data:
 | Wiring per switch       | Pi **3.3 V → switch → GPIO input**, with input pull-down; never 5 V on GPIO                                     |
 | Electrical reading      | Closed contact = raw 1; open contact = raw 0; GPIO Zero input uses `pull_up=False`                              |
 | Water polarity          | Initially wet = closed = 1; dry = open = 0; invert `wet_value` after physical testing if needed                 |
-| Sensor order            | S1 lowest through S5 highest; assign and record five distinct BCM pins and physical header pins in TH-02        |
-| Filtering               | Default: sample every 50 ms; publish a changed five-bit pattern after 200 ms unchanged; tune during calibration |
+| Sensor order            | S1 lowest through S4 highest; assign and record four distinct BCM pins and physical header pins in TH-02        |
+| Filtering               | Default: sample every 50 ms; publish a changed four-bit pattern after 200 ms unchanged; tune during calibration |
 | Initialization / errors | Unknown until a stable reading; GPIO read failure becomes a fault immediately                                   |
 | Read timeout            | A reading older than 1 second is unknown; no progress based on stale readings                                   |
-| Level meaning           | Level 0 = below S1, operationally empty; level 5 = S5 wet, operationally full; not a volume measurement         |
+| Level meaning           | Level 0 = below S1, operationally empty; level 4 = S4 wet, operationally full; not a volume measurement         |
 
 Normalized patterns, bottom → top:
 
 | Wet pattern              | Level                                                                 |
 | ------------------------ | --------------------------------------------------------------------- |
-| `00000`                  | 0                                                                     |
-| `10000`                  | 1                                                                     |
-| `11000`                  | 2                                                                     |
-| `11100`                  | 3                                                                     |
-| `11110`                  | 4                                                                     |
-| `11111`                  | 5                                                                     |
+| `0000`                  | 0                                                                     |
+| `1000`                  | 1                                                                     |
+| `1100`                  | 2                                                                     |
+| `1110`                  | 3                                                                     |
+| `1111`                  | 4                                                                     |
 | Any other stable pattern | Fault; level null; never count isolated wet switches as a valid level |
 
 - Use 200 ms filtering for accepted level changes; the 2-second refill hold applies after that.
@@ -127,8 +126,8 @@ Normalized patterns, bottom → top:
 
 - Status: BLOCKED (physical); deployment tooling implemented | Depends: TH-01 | Execution: physical Pi
 - Files: `deploy/` excluding `deploy/systemd/`; `docs/device.md`; hardware fields in `config/device.json`.
-- Deliver: 32-bit Lite setup, packaged Qt/GPIO dependencies, validated graphics backend, fullscreen HDMI output, keyboard pairing/trust/reconnect, keyboard layout, GPIO permissions and pin map.
-- Acceptance pending: application types and renders at 1280 × 720; keyboard works after reboot and sleep/wake; no network needed; screen blanking disabled; record OS/packages and idle/typing memory use on 512 MB. No Pi, HDMI or Bluetooth device acceptance has been performed.
+- Deliver: Trixie Lite 64-bit arm64 setup with 64-bit system Python, packaged Qt/GPIO dependencies, validated graphics backend, fullscreen HDMI output, keyboard pairing/trust/reconnect, keyboard layout, GPIO permissions and pin map.
+- Acceptance pending: application types and renders at 1280 × 720; keyboard works after reboot and sleep/wake; no network needed; screen blanking disabled; record OS/packages and idle/typing memory use on 512 MB, including app + Weston + OS for Wayland. Arm64 package availability is not proof of memory fit. No Pi, HDMI or Bluetooth device acceptance has been performed.
 - Gate: verify passive contacts before wiring; record provisional polarity explicitly; unresolved package/graphics/memory problems block device deployment, not mock development.
 
 ### TH-03 — Sensor adapter
@@ -190,7 +189,7 @@ Normalized patterns, bottom → top:
 - Status: BLOCKED (physical); calibration tooling and operator runbook implemented | Depends: TH-02, TH-03, TH-08, TH-09 | Execution: physical installation
 - Files: `docs/operator.md`; tested settings in `config/device.json`; timing changes in `config/script.json` coordinated with TH-05 owner.
 - Deliver: measured wet/dry polarity, height/order and wiring table; drainage/refill tuning; Bluetooth re-pairing/reconnect steps; next-visitor reset; service stop/restart; shutdown/update and backup-image procedure.
-- Done: fill/drain through all six levels; confirm filtering and resume threshold; operator can recover from a sleeping keyboard, sensor fault and restarted process; record power supply/display power arrangement and physical test evidence.
+- Done: fill/drain through all five levels; confirm filtering and resume threshold; operator can recover from a sleeping keyboard, sensor fault and restarted process; record power supply/display power arrangement and physical test evidence.
 
 ### TH-11 — Installation acceptance
 

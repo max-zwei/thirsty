@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from xml.etree import ElementTree
 
 import pytest
 from PySide6.QtCore import QCoreApplication
@@ -22,6 +23,23 @@ from app.sensors import MockSensorAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_URL = "https://example.org/integration-test-fixture"
+
+
+@pytest.mark.parametrize("level", range(5))
+def test_water_level_artwork_has_four_rows_five_columns_and_bottom_up_fill(level):
+    icon = ROOT / f"app/assets/icons/water-level-{level}.svg"
+    rectangles = ElementTree.parse(icon).getroot().findall("{http://www.w3.org/2000/svg}rect")
+    cells = [rect for rect in rectangles if rect.get("fill") is not None]
+    rows = sorted({int(cell.get("y")) for cell in cells})
+    assert len(rows) == 4
+    assert len(cells) == 20
+    for index, y in enumerate(rows):
+        row = [cell for cell in cells if int(cell.get("y")) == y]
+        assert len(row) == 5
+        assert sorted(int(cell.get("x")) for cell in row) == [4, 22, 40, 58, 76]
+        expected = "#FF0000" if level == 0 else "#0000FF" if index >= 4 - level else "white"
+        assert {cell.get("fill") for cell in row} == {expected}
+    assert not (ROOT / "app/assets/icons/water-level-5.svg").exists()
 
 
 @pytest.fixture
@@ -110,13 +128,18 @@ def test_external_input_drives_real_controller_and_resets(qt_application, tmp_pa
         controller.start()
         controller.submit("Synthetic integration idea")
         assert controller.state == "paused_sensor"
-        raw({"raw_bits": [1, 1, 1, 1, 1]})
+        raw({"raw_bits": [1, 1, 1, 1]})
         advance(settings.sensors.stable_for_ms + settings.interaction.refill_hold_ms + 100)
         assert controller.state == "running"
-        raw({"raw_bits": [0, 0, 0, 0, 0]})
+        assert controller.waterLevel == 4
+        # An obsolete fifth sensor must invalidate external input, not truncate it.
+        raw({"raw_bits": [1, 1, 1, 1, 1]})
+        assert controller.sensorStatus == "unknown"
+        assert controller.waterLevel is None
+        raw({"raw_bits": [0, 0, 0, 0]})
         advance(settings.sensors.stable_for_ms + 100)
         assert controller.state == "paused_water"
-        raw({"raw_bits": [1, 1, 1, 1, 1]})
+        raw({"raw_bits": [1, 1, 1, 1]})
         advance(settings.sensors.stable_for_ms + settings.interaction.refill_hold_ms + 100)
         assert controller.state == "running"
         raw({"read_failure": True})
@@ -125,7 +148,7 @@ def test_external_input_drives_real_controller_and_resets(qt_application, tmp_pa
         raw({"private": "Never print synthetic visitor content"})
         assert controller.sensorStatus == "unknown"
         assert "Never print" not in capsys.readouterr().err
-        raw({"raw_bits": [1, 1, 1, 1, 1]})
+        raw({"raw_bits": [1, 1, 1, 1]})
         advance(settings.sensors.stable_for_ms + settings.interaction.refill_hold_ms + 100)
         advance(sum(step.delay_ms for step in script.progress) + 100)
         assert controller.state == "finished"
@@ -155,7 +178,7 @@ def test_external_input_drives_real_controller_and_resets(qt_application, tmp_pa
 def test_native_qml_runtime_exits_cleanly_on_sigterm(tmp_path):
     """Use real Qt in a child, isolated from controller tests' QCoreApplication."""
     raw = tmp_path / "raw.json"
-    raw.write_text('{"raw_bits": [1, 1, 1, 1, 1]}', encoding="utf-8")
+    raw.write_text('{"raw_bits": [1, 1, 1, 1]}', encoding="utf-8")
     program = '''
 import os
 import signal

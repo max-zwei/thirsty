@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "thirsty"
 version = "0.1.0"
-description = "A local Qt performance controlled by a five-switch water installation"
+description = "A local Qt performance controlled by a four-switch water installation"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

@@ -45,15 +45,15 @@ def poll_at(adapter, clock, readings, when):
     return readings[-1]
 
 
-def accept(adapter, clock, readings, bits=(1, 1, 1, 0, 0)):
+def accept(adapter, clock, readings, bits=(1, 1, 1, 0)):
     adapter.setRawBits(bits)
     adapter.start()
     return poll_at(adapter, clock, readings, 0.2)
 
 
-@pytest.mark.parametrize("wet", [(1, 1, 1, 1, 1), (0, 0, 0, 0, 0), (0, 1, 0, 1, 0)])
-@pytest.mark.parametrize("normalized", list(product((0, 1), repeat=5)))
-def test_all_32_patterns_and_polarities(normalized, wet):
+@pytest.mark.parametrize("wet", [(1, 1, 1, 1), (0, 0, 0, 0), (0, 1, 0, 1)])
+@pytest.mark.parametrize("normalized", list(product((0, 1), repeat=4)))
+def test_all_16_patterns_and_polarities(normalized, wet):
     clock = Clock()
     adapter = MockSensorAdapter(SensorSettings(wet_values=wet), clock=clock, auto_timers=False)
     readings = []
@@ -66,7 +66,7 @@ def test_all_32_patterns_and_polarities(normalized, wet):
         assert poll_at(adapter, clock, readings, 0.199).status == "unknown"
         reading = poll_at(adapter, clock, readings, 0.2)
         level = sum(normalized)
-        valid = normalized == (1,) * level + (0,) * (5 - level)
+        valid = normalized == (1,) * level + (0,) * (4 - level)
         assert reading == SensorReading(raw, level if valid else None, "ok" if valid else "fault", 0.2, True)
     finally:
         adapter.stop()
@@ -88,40 +88,40 @@ def test_each_steady_poll_refreshes_heartbeat_timestamp(mock):
         count = len(readings)
         reading = poll_at(adapter, clock, readings, when)
         assert len(readings) == count + 1
-        assert reading == SensorReading((1, 1, 1, 0, 0), 3, "ok", when, True)
+        assert reading == SensorReading((1, 1, 1, 0), 3, "ok", when, True)
 
 
 def test_candidate_keeps_last_accepted_level_but_blocks_progress(mock):
     adapter, clock, readings = mock
     accept(adapter, clock, readings)
-    adapter.setRawBits((0, 0, 0, 0, 0))
+    adapter.setRawBits((0, 0, 0, 0))
     reading = poll_at(adapter, clock, readings, 0.3)
-    assert reading == SensorReading((0, 0, 0, 0, 0), 3, "ok", 0.3, False)
+    assert reading == SensorReading((0, 0, 0, 0), 3, "ok", 0.3, False)
     assert not poll_at(adapter, clock, readings, 0.499).is_stable
-    assert poll_at(adapter, clock, readings, 0.5) == SensorReading((0, 0, 0, 0, 0), 0, "ok", 0.5, True)
+    assert poll_at(adapter, clock, readings, 0.5) == SensorReading((0, 0, 0, 0), 0, "ok", 0.5, True)
 
 
 def test_bounce_restarts_full_window_even_returning_to_accepted_pattern(mock):
     adapter, clock, readings = mock
     accept(adapter, clock, readings)
-    adapter.setRawBits((1, 0, 0, 0, 0))
+    adapter.setRawBits((1, 0, 0, 0))
     poll_at(adapter, clock, readings, 0.3)
-    adapter.setRawBits((1, 1, 1, 0, 0))
+    adapter.setRawBits((1, 1, 1, 0))
     assert not poll_at(adapter, clock, readings, 0.4).is_stable
-    adapter.setRawBits((1, 0, 0, 0, 0))
+    adapter.setRawBits((1, 0, 0, 0))
     assert not poll_at(adapter, clock, readings, 0.5).is_stable
     assert poll_at(adapter, clock, readings, 0.699).level == 3
-    assert poll_at(adapter, clock, readings, 0.7) == SensorReading((1, 0, 0, 0, 0), 1, "ok", 0.7, True)
+    assert poll_at(adapter, clock, readings, 0.7) == SensorReading((1, 0, 0, 0), 1, "ok", 0.7, True)
 
 
 def test_invalid_pattern_faults_only_after_stability_and_recovers_after_new_window(mock):
     adapter, clock, readings = mock
     accept(adapter, clock, readings)
-    adapter.setRawBits((0, 1, 0, 0, 0))
+    adapter.setRawBits((0, 1, 0, 0))
     assert poll_at(adapter, clock, readings, 0.3).level == 3
-    assert poll_at(adapter, clock, readings, 0.5) == SensorReading((0, 1, 0, 0, 0), None, "fault", 0.5, True)
-    adapter.setRawBits((1, 0, 0, 0, 0))
-    assert poll_at(adapter, clock, readings, 0.6) == SensorReading((1, 0, 0, 0, 0), None, "fault", 0.6, False)
+    assert poll_at(adapter, clock, readings, 0.5) == SensorReading((0, 1, 0, 0), None, "fault", 0.5, True)
+    adapter.setRawBits((1, 0, 0, 0))
+    assert poll_at(adapter, clock, readings, 0.6) == SensorReading((1, 0, 0, 0), None, "fault", 0.6, False)
     assert poll_at(adapter, clock, readings, 0.8).level == 1
 
 
@@ -131,12 +131,12 @@ def test_configurable_stabilization(stable_ms):
     adapter = MockSensorAdapter(SensorSettings(stable_for_ms=stable_ms), clock=clock, auto_timers=False)
     readings = []
     adapter.readingChanged.connect(readings.append)
-    adapter.setRawBits((1, 1, 1, 1, 1))
+    adapter.setRawBits((1, 1, 1, 1))
     try:
         adapter.start()
         if stable_ms:
             assert not poll_at(adapter, clock, readings, (stable_ms - 1) / 1000).is_stable
-        assert poll_at(adapter, clock, readings, stable_ms / 1000).level == 5
+        assert poll_at(adapter, clock, readings, stable_ms / 1000).level == 4
     finally:
         adapter.stop()
 
@@ -146,9 +146,9 @@ def test_read_failure_is_immediate_retains_raw_timestamp_and_eventually_stales(m
     accept(adapter, clock, readings)
     adapter.setReadFailure(True)
     for when in (0.201, 0.5, 1.199):
-        assert poll_at(adapter, clock, readings, when) == SensorReading((1, 1, 1, 0, 0), None, "fault", 0.2, False)
+        assert poll_at(adapter, clock, readings, when) == SensorReading((1, 1, 1, 0), None, "fault", 0.2, False)
     for when in (1.2, 1.5, 100):
-        assert poll_at(adapter, clock, readings, when) == SensorReading((1, 1, 1, 0, 0), None, "unknown", 0.2, False)
+        assert poll_at(adapter, clock, readings, when) == SensorReading((1, 1, 1, 0), None, "unknown", 0.2, False)
 
 
 def test_failed_startup_never_invents_successful_timestamp(mock):
@@ -167,7 +167,7 @@ def test_failure_breaks_debounce_and_recovery_requires_stability(mock):
     adapter.setReadFailure(True)
     poll_at(adapter, clock, readings, 0.21)
     adapter.setReadFailure(False)
-    assert poll_at(adapter, clock, readings, 0.3) == SensorReading((1, 1, 1, 0, 0), None, "fault", 0.3, False)
+    assert poll_at(adapter, clock, readings, 0.3) == SensorReading((1, 1, 1, 0), None, "fault", 0.3, False)
     assert not poll_at(adapter, clock, readings, 0.499).is_stable
     assert poll_at(adapter, clock, readings, 0.5).level == 3
 
@@ -176,10 +176,10 @@ def test_unknown_mock_input_retains_last_success_and_requires_new_stability(mock
     adapter, clock, readings = mock
     accept(adapter, clock, readings)
     adapter.setRawBits(None)
-    assert poll_at(adapter, clock, readings, 0.3) == SensorReading((1, 1, 1, 0, 0), None, "unknown", 0.2, False)
+    assert poll_at(adapter, clock, readings, 0.3) == SensorReading((1, 1, 1, 0), None, "unknown", 0.2, False)
     assert poll_at(adapter, clock, readings, 3).sampled_at == 0.2
-    adapter.setRawBits([1, 1, 1, 0, 0])
-    assert poll_at(adapter, clock, readings, 4) == SensorReading((1, 1, 1, 0, 0), None, "unknown", 4, False)
+    adapter.setRawBits([1, 1, 1, 0])
+    assert poll_at(adapter, clock, readings, 4) == SensorReading((1, 1, 1, 0), None, "unknown", 4, False)
     assert poll_at(adapter, clock, readings, 4.2).level == 3
 
 
@@ -208,11 +208,11 @@ def test_stale_timeout_is_configurable():
         adapter.stop()
 
 
-@pytest.mark.parametrize("bits", [(1, 1), (0,) * 6, (True, 0, 0, 0, 0), (1.0, 0, 0, 0, 0), (2, 0, 0, 0, 0), "10000", 5])
+@pytest.mark.parametrize("bits", [(1, 1), (0,) * 5, (True, 0, 0, 0), (1.0, 0, 0, 0), (2, 0, 0, 0), "1000", 5])
 def test_invalid_mock_bits_rejected_without_changing_input(mock, bits):
     adapter, clock, readings = mock
     accept(adapter, clock, readings)
-    with pytest.raises(ValueError, match="five bottom-to-top"):
+    with pytest.raises(ValueError, match="four bottom-to-top"):
         adapter.setRawBits(bits)
     assert poll_at(adapter, clock, readings, 0.25).level == 3
 
@@ -225,7 +225,7 @@ def test_failure_toggle_requires_boolean(mock, failed):
 
 def test_mock_setter_copies_mutable_list_and_does_not_emit(mock):
     adapter, clock, readings = mock
-    bits = [1, 1, 0, 0, 0]
+    bits = [1, 1, 0, 0]
     adapter.setRawBits(bits)
     bits[0] = 0
     adapter.setReadFailure(False)
@@ -239,13 +239,13 @@ def test_shutdown_is_idempotent_and_restart_reinitializes(mock):
     accept(adapter, clock, readings)
     clock.now = 0.3
     adapter.stop()
-    assert readings[-1] == SensorReading((1, 1, 1, 0, 0), None, "unknown", 0.2, False)
+    assert readings[-1] == SensorReading((1, 1, 1, 0), None, "unknown", 0.2, False)
     count = len(readings)
     adapter.stop()
     assert len(readings) == count
     assert poll_at(adapter, clock, readings, 0.5).sampled_at == 0.2
     adapter.start()
-    assert readings[-1] == SensorReading((1, 1, 1, 0, 0), None, "unknown", 0.5, False)
+    assert readings[-1] == SensorReading((1, 1, 1, 0), None, "unknown", 0.5, False)
     assert poll_at(adapter, clock, readings, 0.7).level == 3
 
 
@@ -264,7 +264,7 @@ def test_qt_timer_connection_and_delivery_on_owner_thread():
 
     consumer = Consumer()
     adapter.readingChanged.connect(consumer.receive)
-    adapter.setRawBits((1, 0, 0, 0, 0))
+    adapter.setRawBits((1, 0, 0, 0))
     timer = adapter.findChild(QTimer)
     try:
         adapter.start()
@@ -292,7 +292,7 @@ class FakeGPIO:
         self.imports = []
         self.devices = []
         self.factories = []
-        self.values = {27: 0, 2: 1, 17: 0, 4: 0, 3: 1}
+        self.values = {27: 0, 2: 1, 17: 0, 4: 0}
         self.fail_open_at = None
         self.fail_read_pin = None
         self.fail_close_pin = None
@@ -355,7 +355,7 @@ def gpio(monkeypatch):
 
 
 def live_settings(**kwargs):
-    return replace(SensorSettings(pins=(27, 2, 17, 4, 3), wet_values=(0, 1, 0, 1, 0), pin_factory="native"), **kwargs)
+    return replace(SensorSettings(pins=(27, 2, 17, 4), wet_values=(0, 1, 0, 1), pin_factory="native"), **kwargs)
 
 
 def test_mock_never_imports_gpio(monkeypatch):
@@ -369,14 +369,14 @@ def test_mock_never_imports_gpio(monkeypatch):
 
 
 def test_live_missing_pins_rejected_before_import(gpio):
-    with pytest.raises(ConfigurationError, match="five configured, distinct"):
+    with pytest.raises(ConfigurationError, match="four configured, distinct"):
         GPIOSensorAdapter(SensorSettings(), auto_timers=False)
     assert gpio.imports == []
 
 
 def test_duplicate_pin_configuration_rejected(gpio):
     with pytest.raises(ConfigurationError, match="distinct"):
-        GPIOSensorAdapter(SensorSettings(pins=(2, 2, 3, 4, 5)), auto_timers=False)
+        GPIOSensorAdapter(SensorSettings(pins=(2, 2, 3, 4)), auto_timers=False)
     assert gpio.imports == []
 
 
@@ -399,11 +399,11 @@ def test_configured_backend_order_polarity_pull_down_and_cleanup(gpio, factory):
     assert gpio.devices == []
     adapter.start()
     assert gpio.imports == ["gpiozero", sensors._FACTORIES[factory][0]]
-    assert [device.pin for device in gpio.devices] == [27, 2, 17, 4, 3]
+    assert [device.pin for device in gpio.devices] == [27, 2, 17, 4]
     assert all(device.pull_up is False and device.factory is gpio.factories[0] for device in gpio.devices)
-    assert poll_at(adapter, clock, readings, 0.2) == SensorReading((0, 1, 0, 0, 1), 3, "ok", 0.2, True)
+    assert poll_at(adapter, clock, readings, 0.2) == SensorReading((0, 1, 0, 0), 3, "ok", 0.2, True)
     gpio.fail_read_pin = 17
-    assert poll_at(adapter, clock, readings, 0.21) == SensorReading((0, 1, 0, 0, 1), None, "fault", 0.2, False)
+    assert poll_at(adapter, clock, readings, 0.21) == SensorReading((0, 1, 0, 0), None, "fault", 0.2, False)
     adapter.stop()
     adapter.stop()
     assert all(device.close_count == 1 for device in gpio.devices)
@@ -411,7 +411,7 @@ def test_configured_backend_order_polarity_pull_down_and_cleanup(gpio, factory):
     assert poll_at(adapter, clock, readings, 0.4).sampled_at == 0.2
 
 
-@pytest.mark.parametrize("opened", range(5))
+@pytest.mark.parametrize("opened", range(4))
 def test_partial_startup_closes_every_created_resource(gpio, opened):
     gpio.fail_open_at = opened
     adapter = GPIOSensorAdapter(live_settings(), auto_timers=False)
@@ -504,8 +504,8 @@ def test_live_restart_reopens_resources(gpio):
     adapter.stop()
     clock.now = 0.3
     adapter.start()
-    assert readings[-1] == SensorReading((0, 1, 0, 0, 1), None, "unknown", 0.3, False)
-    assert len(gpio.devices) == 10
+    assert readings[-1] == SensorReading((0, 1, 0, 0), None, "unknown", 0.3, False)
+    assert len(gpio.devices) == 8
     assert poll_at(adapter, clock, readings, 0.5).level == 3
     adapter.stop()
     assert all(device.close_count == 1 for device in gpio.devices)

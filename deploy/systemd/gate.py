@@ -37,7 +37,7 @@ def validate(approval, backend, mode, display):
         require(device.sensors.hardware_verified is True, 'Live requires hardware_verified')
         require(device.sensors.pin_factory == 'lgpio', 'Live baseline requires verified lgpio')
         require(all(pin is not None for pin in device.sensors.physical_pins), 'Live requires physical pin record')
-        # BCM/header correspondence, not merely five distinct numbers.
+        # BCM/header correspondence, not merely four distinct numbers.
         header = {2:3, 3:5, 4:7, 14:8, 15:10, 17:11, 18:12, 27:13, 22:15,
                   23:16, 24:18, 10:19, 9:21, 25:22, 11:23, 8:24, 7:26,
                   0:27, 1:28, 5:29, 6:31, 12:32, 13:33, 19:35, 16:36,

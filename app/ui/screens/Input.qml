@@ -57,6 +57,10 @@ FocusScope {
             lineHeight: Theme.typographyBodyLineHeight
             lineHeightMode: Text.ProportionalHeight
         }
+        CreditsBanner {
+            width: parent.width
+            text: root.experience.copy.start_title
+        }
     }
 
     Text {

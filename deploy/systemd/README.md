@@ -1,6 +1,6 @@
 # TH-08: explicit native kiosk boot lifecycle
 
-These files implement the reachable deployment procedure, **not physical acceptance**. No Pi is available; systemd/PAM/DRM/VT boot, signal/GPIO cleanup, GPU scanout and Bluetooth reconnect remain untested. The final graphics route is unresolved. Use official Raspberry Pi OS Lite **Trixie armhf**, system Python, and the common manifest/package procedure in `../packages.txt`, `../setup-device.sh` and `../../docs/device.md`. Bookworm uses similar logind/PAM concepts but is not accepted by this baseline's target gate.
+These files implement the reachable deployment procedure, **not physical acceptance**. No Pi is available; systemd/PAM/DRM/VT boot, signal/GPIO cleanup, GPU scanout and Bluetooth reconnect remain untested. The final graphics route is unresolved. Use official Raspberry Pi OS Lite **Trixie 64-bit arm64**, 64-bit system Python, and the common manifest/package procedure in `../packages.txt`, `../setup-device.sh` and `../../docs/device.md`. Bookworm uses similar logind/PAM concepts but is not accepted by this baseline's target gate. App + Weston + OS memory fit on the 512 MB Pi remains an explicit physical acceptance requirement, not a consequence of arm64 package availability.
 
 Stock documented Trixie Qt packages do not supply EGLFS/KMS. Do not enable that route unless the actual installed official build has **both** plugins and passes physical rendering acceptance. Wayland requires explicitly installing `qt6-wayland weston` through TH-02. There is no fallback, custom Qt build, pip wheel, browser, server or software renderer. Commands here use the public entry point **`python3 -m app`**, superseding older `app.main` examples in the baseline documentation.
 
@@ -14,7 +14,7 @@ One `thirsty.service` owns reserved **VT7 / seat0**, with a dedicated PAM/logind
 /usr/bin/python3 -m app --mode live --device /opt/thirsty/config/device.json --script /opt/thirsty/config/script.json --fullscreen
 ```
 
-The sensor argument is `mock` **only when the operator explicitly selects `--mode mock`**. Mock is a display/recovery trial, not a live installation. Live additionally gates five distinct BCM pins, matching physical header pins, `hardware_verified=true` and verified `lgpio`. Approval is an operator assertion, not an electrical safety test. Complete the passive-contact and polarity procedure before authorizing live.
+The sensor argument is `mock` **only when the operator explicitly selects `--mode mock`**. Mock is a display/recovery trial, not a live installation. Live additionally gates four distinct BCM pins, matching physical header pins, `hardware_verified=true` and verified `lgpio`. Approval is an operator assertion, not an electrical safety test. Complete the passive-contact and polarity procedure before authorizing live.
 
 The runtime directory `/run/thirsty` is systemd-created mode 0700, owned by the same user as both processes. `LG_WD` points lgpio's notification files there, never into the immutable app checkout. A nonblocking `flock` protects the seat lifecycle. Weston uses private socket `thirsty-wayland`; Qt starts only after a bounded 20-second readiness window with an actual libwayland-client connection and protocol roundtrip. Each probe has its own deadline. No fixed startup sleep is used. A compositor **or** application exit tears down the other process and fails the service, so `Restart=on-failure` produces a fresh app Start with no restored transcript. Four starts in 120 seconds and five-second restart spacing bound failures. Manual `systemctl stop` is not restarted. SIGTERM is forwarded to the application first, allowing its integrated GPIO cleanup, then Weston; each gets eight seconds before forced termination.
 
@@ -61,13 +61,17 @@ Use `--display-backend eglfs --display-config /private/operator/eglfs.json` only
 First start is operator-controlled:
 
 ```sh
-sudo systemctl start thirsty.service
+artwork start
 systemctl status thirsty.service
 journalctl --namespace=thirsty -u thirsty.service --since today
 loginctl session-status
 sudo systemctl stop thirsty.service
 sudo systemctl restart thirsty.service
 ```
+
+The installer installs the root-owned executable `/usr/local/bin/artwork`. `artwork start` uses absolute system command paths and works from any directory without a virtualenv, including an SSH maintenance session. Non-root callers are prompted through sudo; root callers invoke systemctl directly. It only starts `thirsty.service`, preserving the installed mode/backend, non-root application identity and VT7/PAM lifecycle. It never enables boot, changes approval or starts a second app; an already active service is left running. Use the absolute command path if `/usr/local/bin` is absent from your shell's `PATH`. A successful systemctl request does not certify application readiness; inspect status, journal and the physical display.
+
+To install the command on an existing device, explicitly stop the service, update the reviewed root-owned `/opt/thirsty` checkout while preserving commissioned configuration, and repeat the full installer above with the existing approved mode/backend and `--apply`. Include `--enable` only to retain approved boot startup; otherwise the installer disables it. Then run `artwork start`. Updating only the checkout or running the package-only setup does not refresh installed helpers.
 
 Inspect the service's actual session with `loginctl` (active seat0, VT7 and correct user), permissions and actual hardware mode. Validate synthetic typing, prolonged idle, app and compositor kill recovery into Start, manual stop, GPIO cleanup, no competing getty, start-limit behavior and reboot. `systemctl reset-failed thirsty.service` clears the rate limit **only after fixing the cause**. Do not log visitor text, input traces, environments or screenshots; keep Qt verbose diagnostics off in visitor operation.
 
@@ -87,6 +91,7 @@ Keep maintenance access and a backup of pre-existing operator files. Stop and di
 sudo systemctl disable --now thirsty.service
 sudo systemctl stop systemd-journald@thirsty.service systemd-journald@thirsty.socket
 sudo rm /etc/systemd/system/thirsty.service /etc/pam.d/thirsty
+sudo rm /usr/local/bin/artwork
 sudo rm /etc/systemd/journald@thirsty.conf.d/limits.conf
 sudo rm /etc/systemd/system/systemd-journald@thirsty.service.d/volatile.conf
 sudo systemctl daemon-reload

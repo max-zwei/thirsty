@@ -1,4 +1,4 @@
-# Raspberry Pi OS Lite Trixie, armhf. See docs/device.md for sources and limits.
+# Raspberry Pi OS Lite Trixie, arm64. See docs/device.md for sources and limits.
 # One package per line; backend-specific packages are added by setup-device.sh.
 # Use the OS interpreter, not pip wheels or a private Qt build.
 python3

@@ -66,13 +66,13 @@ def ids(controller, prefix=""):
 class Rig:
     controller: ExperienceController
     clock: FakeClock
-    level: int | None = 5
+    level: int | None = 4
     status: str = "ok"
     stable: bool = True
 
-    def send(self, level=5, *, status="ok", stable=True):
+    def send(self, level=4, *, status="ok", stable=True):
         self.level, self.status, self.stable = level, status, stable
-        bits = tuple(int(index < level) for index in range(5)) if level is not None else None
+        bits = tuple(int(index < level) for index in range(4)) if level is not None else None
         self.controller.receiveReading(SensorReading(bits, level, status, self.clock(), stable))
 
     def advance(self, milliseconds):
@@ -224,7 +224,7 @@ def test_unchanged_and_rising_positive_heartbeats_preserve_hold(make_rig):
     rig.advance(750)
     rig.send(2)
     rig.advance(750)
-    rig.send(5)
+    rig.send(4)
     rig.advance(499)
     assert rig.controller.state == "paused_water"
     rig.advance(1)
@@ -279,7 +279,7 @@ def test_unstable_candidate_freezes_without_inventing_water_or_fault(make_rig):
     rig = make_rig(delays=(1000,))
     rig.begin()
     rig.advance(400)
-    rig.send(5, stable=False)
+    rig.send(4, stable=False)
     rig.advance(5000)
     assert rig.controller.state == "running"
     assert ids(rig.controller) == ["visitor:idea"]
@@ -295,7 +295,7 @@ def test_unstable_at_due_boundary_cannot_incidentally_finish(make_rig):
     rig.begin()
     rig.advance(750)
     rig.clock.advance(250)
-    rig.send(5, stable=False)
+    rig.send(4, stable=False)
     assert ids(rig.controller) == ["visitor:idea"]
     rig.send(0)
     assert rig.controller.state == "paused_water"
@@ -358,7 +358,7 @@ def test_reset_clears_pending_session_and_requires_fresh_heartbeat(make_rig, pha
     rig = make_rig(delays=(1000,))
     rig.begin()
     rig.advance(250)
-    old_reading = SensorReading((1, 1, 1, 1, 1), 5, "ok", rig.clock())
+    old_reading = SensorReading((1, 1, 1, 1), 4, "ok", rig.clock())
     if phase == "paused_water":
         rig.send(0)
     elif phase == "paused_sensor":
@@ -391,8 +391,8 @@ def test_out_of_order_reading_cannot_interrupt_newer_accepted_sample(make_rig):
     rig = make_rig()
     rig.begin()
     rig.advance(500)
-    rig.controller.receiveReading(SensorReading((0, 0, 0, 0, 0), 0, "ok", 0.1))
-    assert rig.controller.waterLevel == 5
+    rig.controller.receiveReading(SensorReading((0, 0, 0, 0), 0, "ok", 0.1))
+    assert rig.controller.waterLevel == 4
     assert rig.controller.state == "running"
     assert not ids(rig.controller, "water:")
 

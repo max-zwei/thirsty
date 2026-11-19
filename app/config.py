@@ -30,7 +30,7 @@ from string import Formatter
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
-from .contracts import MESSAGE_VARIANTS, Mode, RawBits, ScriptStep, TranscriptRow
+from .contracts import MESSAGE_VARIANTS, SENSOR_COUNT, Mode, RawBits, ScriptStep, TranscriptRow
 
 
 class ConfigurationError(ValueError):
@@ -78,17 +78,17 @@ def _object(value: Any, path: str, allowed: set[str], required: set[str]) -> Map
     return value
 
 
-def _five(value: Any, path: str) -> tuple[Any, ...]:
-    if not isinstance(value, (list, tuple)) or len(value) != 5:
-        _fail(path, "must contain exactly five bottom-to-top entries")
+def _four(value: Any, path: str) -> tuple[Any, ...]:
+    if not isinstance(value, (list, tuple)) or len(value) != SENSOR_COUNT:
+        _fail(path, "must contain exactly four bottom-to-top entries")
     return tuple(value)
 
 
 @dataclass(frozen=True, slots=True)
 class SensorSettings:
-    pins: tuple[int | None, ...] = (None, None, None, None, None)
-    physical_pins: tuple[int | None, ...] = (None, None, None, None, None)
-    wet_values: RawBits = (1, 1, 1, 1, 1)
+    pins: tuple[int | None, ...] = (None, None, None, None)
+    physical_pins: tuple[int | None, ...] = (None, None, None, None)
+    wet_values: RawBits = (1, 1, 1, 1)
     poll_interval_ms: int = 50
     stable_for_ms: int = 200
     stale_after_ms: int = 1000
@@ -97,7 +97,7 @@ class SensorSettings:
 
     def __post_init__(self) -> None:
         for name, maximum in (("pins", 27), ("physical_pins", 40)):
-            values = _five(getattr(self, name), f"sensors.{name}")
+            values = _four(getattr(self, name), f"sensors.{name}")
             assigned = []
             for index, value in enumerate(values):
                 if value is not None:
@@ -105,7 +105,7 @@ class SensorSettings:
             if len(set(assigned)) != len(assigned):
                 _fail(f"sensors.{name}", "assigned pins must be distinct")
             object.__setattr__(self, name, values)
-        wet = _five(self.wet_values, "sensors.wet_values")
+        wet = _four(self.wet_values, "sensors.wet_values")
         for index, value in enumerate(wet):
             _integer(value, f"sensors.wet_values[{index}]", 0, 1)
         object.__setattr__(self, "wet_values", wet)
@@ -130,7 +130,7 @@ class InteractionSettings:
         _integer(self.input_inactivity_ms, "interaction.input_inactivity_ms", 1, 86400000)
         _integer(self.finished_timeout_ms, "interaction.finished_timeout_ms", 1, 86400000)
         _integer(self.refill_hold_ms, "interaction.refill_hold_ms", 0, 86400000)
-        _integer(self.resume_level, "interaction.resume_level", 1, 5)
+        _integer(self.resume_level, "interaction.resume_level", 1, SENSOR_COUNT)
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,7 +160,7 @@ class DeviceSettings:
         if mode not in (Mode.MOCK, Mode.LIVE):
             _fail("mode", "must be mock or live")
         if mode == Mode.LIVE and any(pin is None for pin in self.sensors.pins):
-            _fail("sensors.pins", "live mode requires five configured, distinct BCM pins; calibrate the installation before launch")
+            _fail("sensors.pins", "live mode requires four configured, distinct BCM pins; calibrate the installation before launch")
 
 
 @dataclass(frozen=True, slots=True)

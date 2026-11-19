@@ -166,9 +166,9 @@ def collect(args: argparse.Namespace) -> dict:
             if key in {"ID", "ID_LIKE", "VERSION_ID", "VERSION_CODENAME", "PRETTY_NAME"}:
                 os_release[key] = value.strip('"')
     pi_model = model.get("value", "").startswith("Raspberry Pi 3 Model A Plus")
-    armhf = architecture.get("stdout") == "armhf" and struct.calcsize("P") == 4
+    arm64 = architecture.get("stdout") == "arm64" and struct.calcsize("P") == 8
     trixie = os_release.get("VERSION_CODENAME") == "trixie"
-    target_eligible = platform.system() == "Linux" and pi_model and armhf and trixie
+    target_eligible = platform.system() == "Linux" and pi_model and arm64 and trixie
     qt = qt_inventory()
     inventory = qt.get("inventory", {})
     modules = {name: module_info(name, dist) for name, dist in
@@ -218,19 +218,19 @@ def collect(args: argparse.Namespace) -> dict:
             groups.append(str(gid))
     blockers = []
     if not target_eligible:
-        blockers.append("Requires Pi 3 Model A+, Linux Trixie armhf and a 32-bit Python interpreter.")
+        blockers.append("Requires Pi 3 Model A+, Linux Trixie arm64 and a 64-bit Python interpreter.")
     if not software_eligible:
         blockers.append("Required packages, version ranges, QML/SVG plugins or explicitly selected backend are unavailable.")
     if not config.get("live_configuration_complete", False):
         blockers.append("Live GPIO configuration is incomplete/unverified; keep sensors disconnected.")
     blockers.append("Physical HDMI, GPU acceleration, keyboard reconnect, GPIO calibration, memory and power acceptance require operator evidence; inventory cannot certify them.")
     return {
-        "schema_version": 1, "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
+        "schema_version": 2, "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
         "scope": "Passive offline inventory; no window, modeset, GPIO open, network, keystroke or transcript capture.",
         "host": {"system": platform.system(), "kernel": platform.release(), "machine": platform.machine(),
                  "python": platform.python_version(), "python_bits": struct.calcsize("P") * 8,
                  "model": model, "dpkg_architecture": architecture, "os_release": os_release},
-        "eligibility": {"pi_model_matches": pi_model, "armhf_userspace": armhf, "trixie": trixie,
+        "eligibility": {"pi_model_matches": pi_model, "arm64_userspace": arm64, "trixie": trixie,
                         "target_eligible": target_eligible, "software_baseline_eligible": software_eligible,
                         "selected_backend_plugins_present": backend_available,
                         "physical_acceptance_verified": False},
@@ -254,7 +254,7 @@ def main() -> int:
     parser.add_argument("--device", type=Path, default=ROOT / "config/device.json")
     parser.add_argument("--output", default="-", help="JSON stdout (-) or NEW private output file; never overwrites")
     parser.add_argument("--pid", type=int, help="optional application PID: memory counters only, never command line or session text")
-    parser.add_argument("--require-pi", action="store_true", help="exit 2 unless fixed target model/OS/architecture match")
+    parser.add_argument("--require-pi", action="store_true", help="exit 2 unless Pi 3 A+/Linux Trixie/arm64/64-bit Python match")
     parser.add_argument("--require-software", action="store_true", help="exit 2 unless selected packaged software inventory is eligible")
     args = parser.parse_args()
     if args.pid is not None and args.pid <= 0:

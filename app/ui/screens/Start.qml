@@ -19,16 +19,9 @@ FocusScope {
         height: 189
         spacing: Theme.sizeL
 
-        Text {
+        CreditsBanner {
             width: parent.width
             text: root.experience.copy.start_title
-            textFormat: Text.PlainText
-            wrapMode: Text.Wrap
-            color: Theme.colorsAction
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.typographyHeadingFontSize
-            font.weight: Theme.typographyHeadingFontWeight
-            font.letterSpacing: Theme.typographyHeadingLetterSpacing
         }
         Text {
             width: parent.width

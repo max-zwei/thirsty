@@ -12,6 +12,7 @@ Default: inspect the local apt cache, print candidates, simulate installation.
 Run sudo apt-get update separately on the Pi before planning. No pip, OS upgrade,
 repository addition, automatic backend fallback, service installation, reboot,
 user creation, radio change, modesetting or GPIO access is performed here.
+Requires Raspberry Pi 3 A+, Linux Trixie arm64 and a 64-bit system Python.
 EGLFS is only a requested route: it is NOT supplied by stock Debian Trixie Qt.
 The installed Pi Qt must expose EGLFS/KMS before that route can be used.
 USAGE
@@ -38,8 +39,8 @@ for program in python3 apt-cache apt-get dpkg; do
     command -v "$program" >/dev/null || fail "Required command unavailable: $program"
 done
 script_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-# This is passive inventory, not a hardware/graphics acceptance test. A 64-bit
-# kernel is allowed when dpkg and the actual Python userspace are 32-bit armhf.
+# This is passive inventory, not a hardware/graphics acceptance test.
+# Require dpkg arm64 and the actual 64-bit Python userspace, not just a 64-bit kernel.
 /usr/bin/python3 "$script_dir/preflight.py" --require-pi >/dev/null ||
     fail 'Target guard failed. Run preflight.py for the model/OS/architecture evidence.'
 

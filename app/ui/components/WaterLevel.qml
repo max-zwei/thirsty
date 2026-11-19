@@ -12,7 +12,7 @@ Rectangle {
     readonly property bool knownLevel: sensorStatus === "ok"
                                        && typeof level === "number"
                                        && Number.isInteger(level)
-                                       && level >= 0 && level <= 5
+                                       && level >= 0 && level <= 4
 
     implicitWidth: Theme.componentsWaterLevelWidth
     implicitHeight: Theme.componentsWaterLevelHeight
@@ -24,7 +24,7 @@ Rectangle {
 
     Accessible.role: Accessible.Indicator
     Accessible.name: accessibleName
-    Accessible.description: knownLevel ? String(level) + " / 5" : sensorStatus
+    Accessible.description: knownLevel ? String(level) + " / 4" : sensorStatus
 
     Image {
         anchors.fill: parent

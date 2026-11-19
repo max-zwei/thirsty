@@ -60,9 +60,9 @@ def script_fixture() -> dict:
 
 def test_documented_defaults_and_immutable_settings():
     settings = parse_device({})
-    assert settings.sensors.pins == (None,) * 5
-    assert settings.sensors.physical_pins == (None,) * 5
-    assert settings.sensors.wet_values == (1,) * 5
+    assert settings.sensors.pins == (None,) * 4
+    assert settings.sensors.physical_pins == (None,) * 4
+    assert settings.sensors.wet_values == (1,) * 4
     assert settings.sensors.poll_interval_ms == 50
     assert settings.sensors.stable_for_ms == 200
     assert settings.sensors.stale_after_ms == 1000
@@ -79,32 +79,32 @@ def test_documented_defaults_and_immutable_settings():
 def test_unverified_pin_map_allows_mock_but_never_live():
     settings = DeviceSettings()
     settings.validate_for_mode("mock")
-    with pytest.raises(ConfigurationError, match="five configured, distinct BCM pins"):
+    with pytest.raises(ConfigurationError, match="four configured, distinct BCM pins"):
         settings.validate_for_mode("live")
-    configured = parse_device({"sensors": {"pins": [2, 3, 4, 17, 27]}})
+    configured = parse_device({"sensors": {"pins": [2, 3, 4, 17]}})
     configured.validate_for_mode("live")
     with pytest.raises(ConfigurationError, match="mode"):
         configured.validate_for_mode("automatic")
 
 
 def test_pin_order_is_preserved_not_sorted_and_polarity_need_not_be_contiguous():
-    settings = parse_device({"sensors": {"pins": [27, 2, 17, 4, 3], "wet_values": [0, 1, 0, 1, 0]}})
-    assert settings.sensors.pins == (27, 2, 17, 4, 3)
-    assert settings.sensors.wet_values == (0, 1, 0, 1, 0)
+    settings = parse_device({"sensors": {"pins": [27, 2, 17, 4], "wet_values": [0, 1, 0, 1]}})
+    assert settings.sensors.pins == (27, 2, 17, 4)
+    assert settings.sensors.wet_values == (0, 1, 0, 1)
 
 
 @pytest.mark.parametrize("section,field,value", [
-    ("sensors", "pins", [1, 2, 3, 4]),
-    ("sensors", "pins", [1, 2, 3, 4, 4]),
-    ("sensors", "pins", [-1, 2, 3, 4, 5]),
-    ("sensors", "pins", [28, 2, 3, 4, 5]),
-    ("sensors", "pins", [True, 2, 3, 4, 5]),
-    ("sensors", "physical_pins", [0, None, None, None, None]),
-    ("sensors", "physical_pins", [41, None, None, None, None]),
-    ("sensors", "physical_pins", [3, 3, None, None, None]),
-    ("sensors", "wet_values", [1, 1, 1, 1, 2]),
-    ("sensors", "wet_values", [True, 1, 1, 1, 1]),
-    ("sensors", "wet_values", "11111"),
+    ("sensors", "pins", [1, 2, 3, 4, 5]),
+    ("sensors", "pins", [1, 2, 3, 3]),
+    ("sensors", "pins", [-1, 2, 3, 4]),
+    ("sensors", "pins", [28, 2, 3, 4]),
+    ("sensors", "pins", [True, 2, 3, 4]),
+    ("sensors", "physical_pins", [0, None, None, None]),
+    ("sensors", "physical_pins", [41, None, None, None]),
+    ("sensors", "physical_pins", [3, 3, None, None]),
+    ("sensors", "wet_values", [1, 1, 1, 2]),
+    ("sensors", "wet_values", [True, 1, 1, 1]),
+    ("sensors", "wet_values", "1111"),
     ("sensors", "poll_interval_ms", 0),
     ("sensors", "poll_interval_ms", 60001),
     ("sensors", "poll_interval_ms", 50.0),
@@ -125,7 +125,7 @@ def test_pin_order_is_preserved_not_sorted_and_polarity_need_not_be_contiguous()
     ("interaction", "refill_hold_ms", -1),
     ("interaction", "refill_hold_ms", 86400001),
     ("interaction", "resume_level", 0),
-    ("interaction", "resume_level", 6),
+    ("interaction", "resume_level", 5),
     ("display", "width", 319),
     ("display", "width", 7681),
     ("display", "height", 179),
@@ -140,7 +140,7 @@ def test_reject_invalid_device_field(section, field, value):
 def test_inclusive_configuration_bounds():
     assert SensorSettings(poll_interval_ms=1, stable_for_ms=0, stale_after_ms=1).stable_for_ms == 0
     assert SensorSettings(poll_interval_ms=60000, stable_for_ms=60000, stale_after_ms=3600000).poll_interval_ms == 60000
-    assert InteractionSettings(input_max_length=1, refill_hold_ms=0, resume_level=5).refill_hold_ms == 0
+    assert InteractionSettings(input_max_length=1, refill_hold_ms=0, resume_level=4).refill_hold_ms == 0
     assert InteractionSettings(input_max_length=10000, input_inactivity_ms=86400000, finished_timeout_ms=86400000, refill_hold_ms=86400000).input_max_length == 10000
     assert DisplaySettings(width=320, height=180).width == 320
     assert DisplaySettings(width=7680, height=4320).height == 4320
@@ -308,28 +308,29 @@ def test_direct_dataclass_construction_cannot_bypass_validation():
 
 
 def test_reading_distinguishes_latest_raw_from_stabilized_level():
-    reading = SensorReading((1, 0, 0, 0, 0), 5, "ok", 10.0, is_stable=False)
-    assert reading.level == 5
-    assert reading.raw_bits == (1, 0, 0, 0, 0)
+    reading = SensorReading((1, 0, 0, 0), 4, "ok", 10.0, is_stable=False)
+    assert reading.level == 4
+    assert reading.raw_bits == (1, 0, 0, 0)
     assert reading.sampled_at == 10.0
     assert not reading.is_stable
-    fault = SensorReading((1, 0, 1, 0, 0), None, "fault", 10.0)
+    fault = SensorReading((1, 0, 1, 0), None, "fault", 10.0)
     assert fault.level is None  # Noncontiguous raw input is representable, never counted here.
     assert SensorReading(None, None, "unknown", None).sampled_at is None
 
 
 @pytest.mark.parametrize("kwargs", [
-    {"raw_bits": [1, 1, 1, 1, 1]},
-    {"raw_bits": (True, 1, 1, 1, 1)},
+    {"raw_bits": [1, 1, 1, 1]},
+    {"raw_bits": (True, 1, 1, 1)},
     {"raw_bits": (1, 0)},
-    {"raw_bits": (2, 0, 0, 0, 0)},
-    {"level": 6}, {"level": True}, {"level": None},
+    {"raw_bits": (1, 1, 1, 1, 1)},
+    {"raw_bits": (2, 0, 0, 0)},
+    {"level": 5}, {"level": True}, {"level": None},
     {"status": "full"}, {"status": "fault"},
     {"sampled_at": None}, {"sampled_at": -1}, {"sampled_at": float("nan")},
     {"is_stable": 1},
 ])
 def test_sensor_reading_contract_rejects_invalid_fields(kwargs):
-    values = dict(raw_bits=(1, 1, 1, 1, 1), level=5, status="ok", sampled_at=10.0)
+    values = dict(raw_bits=(1, 1, 1, 1), level=4, status="ok", sampled_at=10.0)
     values.update(kwargs)
     with pytest.raises(ValueError):
         SensorReading(**values)

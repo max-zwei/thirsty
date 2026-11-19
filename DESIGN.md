@@ -104,7 +104,7 @@ This document follows the DESIGN.md template: token frontmatter followed by its 
 
 ## Overview
 
-thirsty is an artwork presented as an app-building chat agent connected to a fake water-cooled server. Five physical sensors measure its water level as water drips away. The development process is theatrical: the interface performs work rather than generating code. See [README.md](README.md) for the project concept and visitor journey.
+thirsty is an artwork presented as an app-building chat agent connected to a fake water-cooled server. Four physical sensors measure its water level as water drips away. The development process is theatrical: the interface performs work rather than generating code. See [README.md](README.md) for the project concept and visitor journey.
 
 **Visual source:** [Figma · thirsty · Design System, node 9:214](https://www.figma.com/design/Vly8oZbSYachZu9ecP58h8/thirsty?node-id=9-214)
 
@@ -182,7 +182,7 @@ Names and variants below match Figma. Frontmatter component keys such as `agent-
 
 | Figma source     | Implemented QML component           | Responsibility                                         |
 | ---------------- | ----------------------------------- | ------------------------------------------------------ |
-| `water_level`    | `WaterLevel.qml`                    | Levels 0–5 plus explicit unknown/fault fallback        |
+| `water_level`    | `WaterLevel.qml`                    | Levels 0–4 plus explicit unknown/fault fallback        |
 | `agent_icon`     | `AgentIcon.qml`                     | Source running/error pixel patterns                    |
 | `agent_messages` | `AgentMessage.qml`                  | Select visual treatment by source `type` and `variant` |
 | `avatar`         | `Avatar.qml`                        | Display source artwork at the reference aspect ratio   |
@@ -192,16 +192,16 @@ Names and variants below match Figma. Frontmatter component keys such as `agent-
 - `Theme.qml`: every YAML token maps to a named QML property with its source token recorded, including resolved aliases; 98 runtime values were checked for parity.
 - Convert `px` values to numeric reference-canvas pixels; preserve exact colors, weights and spacing. YAML stays the visual authority.
 - Screen-specific geometry belongs in `Start.qml`, `Input.qml` and `Running.qml`; component defaults remain shared.
-- User feedback: Start's H1 uses `{colors.action}`; its body retains `{colors.primary}`.
+- User feedback: Start's H1 uses `{colors.action}`; its body retains `{colors.primary}`. `CreditsBanner.qml` shares that heading treatment and the configured `start_title` (“##### FREE AI CREDITS #####”) between Start and Input. Input places the banner after its existing title and prompt, before the input row, with the column's `{size.l}` gap; the field and validation positions remain unchanged.
 - Running: clipped, vertically scrolling transcript; auto-scroll on insertion; water indicator outside the scrolling container at x1088/y96.
 - Keep long messages wrapped within transcript width; preserve the 96px gap below its reference viewport.
 - Compare 1280 × 720 captures to Figma; check fonts, line wraps, fixed indicator and all water/error states.
 
 ### Water level — `water_level` (`9:391`)
 
-Six variants: `Level=0`, `Level=1`, `Level=2`, `Level=3`, `Level=4`, `Level=5`. Each uses `{components.water_level.width}` × `{components.water_level.height}`, with a `{components.water_level.borderWidth}` border in `{colors.primary}`, `{components.water_level.rounded}` corners, and `{components.water_level.padding}` inset. The screenshot shows a five-by-five grid: levels 1–5 fill successive rows from the bottom in `{colors.water}`. Level 0 is a fully `{colors.error}` grid, **not** a `{colors.water}` full tank or a blank grid.
+Five variants: `Level=0`, `Level=1`, `Level=2`, `Level=3`, `Level=4`. Each uses `{components.water_level.width}` × `{components.water_level.height}`, with a `{components.water_level.borderWidth}` border in `{colors.primary}`, `{components.water_level.rounded}` corners, and `{components.water_level.padding}` inset. The implemented indicator uses four rows and five columns: levels 1–4 fill successive rows from the bottom in `{colors.water}`. Level 0 is a fully `{colors.error}` grid, **not** a `{colors.water}` full tank or a blank grid.
 
-Five passive switches are the working hardware assumption. The controller normalizes them bottom → top into levels 0–5; the UI never interprets raw GPIO. Initial polarity is wet=1, configurable after testing. Level 0 means below the lowest switch, operationally empty; level 5 means the highest switch is wet. Only contiguous wet patterns are valid. Wiring, filtering, fault handling and calibration are defined in [PRODUCT.md §4](PRODUCT.md#4-sensor-assumptions-and-calibration); refill behavior is in [§3](PRODUCT.md#3-interaction-defaults).
+Four passive switches are the working hardware assumption. The controller normalizes them bottom → top into levels 0–4; the UI never interprets raw GPIO. Initial polarity is wet=1, configurable after testing. Level 0 means below the lowest switch, operationally empty; level 4 means the highest switch is wet. Only contiguous wet patterns are valid. Wiring, filtering, fault handling and calibration are defined in [PRODUCT.md §4](PRODUCT.md#4-sensor-assumptions-and-calibration); refill behavior is in [§3](PRODUCT.md#3-interaction-defaults).
 
 **Unknown/fault default:** keep the water indicator footprint and outline, hide the last numeric fill, and show a black `?` on white. Pair it with a red sensor-status message. Do not display unknown as level 0. This is an implementation fallback, not a Figma variant.
 

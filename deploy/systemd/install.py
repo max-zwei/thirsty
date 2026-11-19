@@ -21,12 +21,12 @@ def command(*args):
     subprocess.run(args, check=True)
 
 
-def install(source, destination):
+def install(source, destination, mode=0o644):
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
     shutil.copyfile(source, destination)
     os.chown(destination, 0, 0)
-    destination.chmod(0o644)
+    destination.chmod(mode)
 
 
 def require_immutable_app():
@@ -52,7 +52,7 @@ def main():
     if not args.apply:
         print(f'PLAN ONLY: {args.display_backend}, explicitly {args.mode}; no files or host state changed.')
         print('Apply will gate Pi/software, physical display approval, app config and permissions;')
-        print('create dedicated thirsty identity, install one PAM/VT7 service and private journal namespace.')
+        print('create dedicated thirsty identity, install one PAM/VT7 service, artwork start command and private journal namespace.')
         print('No packages, radio changes, boot config edits, starts or automatic fallback.')
         print(f'Approval: {args.approval}; display config: {args.display_config}; app: {APP}')
         return
@@ -98,6 +98,7 @@ def main():
             install(SOURCE / name, '/usr/local/lib/thirsty/' + name)
         install(SOURCE / 'thirsty.pam', '/etc/pam.d/thirsty')
         install(SOURCE / 'thirsty.service', '/etc/systemd/system/thirsty.service')
+        install(SOURCE / 'artwork.py', '/usr/local/bin/artwork', mode=0o755)
         install(SOURCE / 'journald-thirsty.conf', '/etc/systemd/journald@thirsty.conf.d/limits.conf')
         install(SOURCE / 'journal-volatile.conf', '/etc/systemd/system/systemd-journald@thirsty.service.d/volatile.conf')
         # Readability and schema gates as actual unprivileged identity; still no GPIO opens.
@@ -109,6 +110,7 @@ def main():
         # Applying without --enable also clears any previous boot enablement.
         command('systemctl', 'enable' if args.enable else 'disable', 'thirsty.service')
         print('Installed; not started. Boot enablement: ' + ('enabled' if args.enable else 'disabled'))
+        print('Start from any directory with: artwork start (sudo authorization required).')
 
 
 if __name__ == '__main__':

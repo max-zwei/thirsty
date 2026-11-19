@@ -1,8 +1,8 @@
 {
   "sensors": {
-    "pins": [null, null, null, null, null],
-    "physical_pins": [null, null, null, null, null],
-    "wet_values": [1, 1, 1, 1, 1],
+    "pins": [null, null, null, null],
+    "physical_pins": [null, null, null, null],
+    "wet_values": [1, 1, 1, 1],
     "poll_interval_ms": 50,
     "stable_for_ms": 200,
     "stale_after_ms": 1000,

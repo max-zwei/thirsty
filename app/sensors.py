@@ -19,7 +19,7 @@ from typing import cast
 from PySide6.QtCore import QObject, Qt, QTimer, Signal, Slot
 
 from .config import ConfigurationError, SensorSettings
-from .contracts import RawBits, SensorReading, SensorStatus
+from .contracts import SENSOR_COUNT, RawBits, SensorReading, SensorStatus
 
 
 _FACTORIES = {
@@ -160,9 +160,9 @@ class MockSensorAdapter(_SensorAdapter):
     @Slot(object)
     def setRawBits(self, bits: RawBits | list[int] | None) -> None:
         if bits is not None:
-            if (not isinstance(bits, (tuple, list)) or len(bits) != 5
+            if (not isinstance(bits, (tuple, list)) or len(bits) != SENSOR_COUNT
                     or any(type(bit) is not int or bit not in (0, 1) for bit in bits)):
-                raise ValueError("mock raw bits must be five bottom-to-top 0/1 integers or None")
+                raise ValueError("mock raw bits must be four bottom-to-top 0/1 integers or None")
             bits = cast(RawBits, tuple(bits))
         self._input_bits = bits
 
@@ -188,8 +188,8 @@ class GPIOSensorAdapter(_SensorAdapter):
 
     def __init__(self, settings: SensorSettings, *, clock: Callable[[], float] = time.monotonic,
                  auto_timers: bool = True, parent: QObject | None = None):
-        if any(pin is None for pin in settings.pins) or len(set(settings.pins)) != 5:
-            raise ConfigurationError("sensors.pins: live mode requires five configured, distinct BCM pins")
+        if any(pin is None for pin in settings.pins) or len(set(settings.pins)) != SENSOR_COUNT:
+            raise ConfigurationError("sensors.pins: live mode requires four configured, distinct BCM pins")
         factory_name = settings.pin_factory or os.environ.get("GPIOZERO_PIN_FACTORY")
         if factory_name is not None and factory_name not in _FACTORIES:
             raise ConfigurationError("sensors.pin_factory: live mode requires lgpio, rpigpio, pigpio or native; no mock backend")

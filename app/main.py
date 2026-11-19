@@ -1,7 +1,7 @@
 """Native, offline Qt Quick runtime with explicit mock or live sensing.
 
 --mock-file accepts an externally replaced JSON object containing only
-{"raw_bits": [1, 1, 0, 0, 0]} or {"read_failure": true}. Bits are physical,
+{"raw_bits": [1, 1, 0, 0]} or {"read_failure": true}. Bits are physical,
 bottom to top; missing/malformed input is unknown, never an assumed full tank.
 """
 
@@ -15,7 +15,7 @@ import sys
 from typing import Sequence
 
 from .config import ConfigurationError, DeviceSettings, ScriptConfig, load_device, load_script
-from .contracts import Mode
+from .contracts import SENSOR_COUNT, Mode
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -53,8 +53,8 @@ class MockFileInput:
                 self.adapter.setReadFailure(True)
             else:
                 bits = value["raw_bits"]
-                if not isinstance(bits, list) or len(bits) != 5 or any(type(bit) is not int or bit not in (0, 1) for bit in bits):
-                    raise ValueError("raw_bits must be five physical 0/1 integers")
+                if not isinstance(bits, list) or len(bits) != SENSOR_COUNT or any(type(bit) is not int or bit not in (0, 1) for bit in bits):
+                    raise ValueError("raw_bits must be four physical 0/1 integers")
                 self.adapter.setRawBits(bits)
                 self.adapter.setReadFailure(False)
             self._version = version
