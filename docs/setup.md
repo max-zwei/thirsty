@@ -235,18 +235,20 @@ The installer does not start the service; `--apply` without `--enable` leaves it
 
 **Existing Pi update:** stop with `sudo systemctl stop thirsty.service`, update the reviewed root-owned `/opt/thirsty` checkout (preserving your commissioned device config and private approval/display files), then rerun the full installer command above with `--apply`. This installs/updates the command as well as the service helpers; no pip install or virtualenv is needed. Use your previously approved backend, display-config path and mode, not `mock` if the installation is already commissioned for live operation. Include `--enable` only if you intend to retain approved boot startup; omitting it disables boot startup. Then run `artwork start`. Merely updating the checkout or rerunning `deploy/setup-device.sh` does not install this command.
 
-## 6. Your four sensors: proposed map, not electrical approval
+## 6. Your four sensors: recorded map, installation-specific approval
 
-The current low-to-high proposal is:
+The operator-tested low-to-high mapping is:
 
-| Switch | Position | BCM GPIO | Physical header pin |
-| --- | --- | ---: | ---: |
-| S1 / index 0 | Lowest | 22 | 15 |
-| S2 / index 1 | Second | 23 | 16 |
-| S3 / index 2 | Third | 24 | 18 |
-| S4 / index 3 | Highest | 27 | 13 |
+| Switch | Position | Cable color | BCM GPIO | Physical header pin |
+| --- | --- | --- | ---: | ---: |
+| S1 / index 0 | Lowest | Lila/Weiß | 27 | 13 |
+| S2 / index 1 | Second | Gelb | 22 | 15 |
+| S3 / index 2 | Third | Blau | 23 | 16 |
+| S4 / index 3 | Highest | Grün | 24 | 18 |
 
-These are distinct numbering systems. Confirm pin-1 orientation, cable labels, actual switch order and enabled-interface conflicts before wiring. The proposal does not verify that those are the installed leads. Preserve your current four-element configuration; do not overwrite it with a two-sensor example.
+The shared supply is assigned to **3.3 V on physical pin 1**. The operator reported raw dry `1` and wet `0` for all four switches; use `wet_values: [0, 0, 0, 0]`. Successful live operation was reported on 2026-11-20; see the [installation record](operator.md). Repository backend/approval defaults remain null/false intentionally. Do not run live mode on a new installation before commissioning: populated GPIO numbers alone allow the direct app CLI to attempt input initialization; the deployment approval flags are enforced separately by the service gate.
+
+These are distinct numbering systems. Confirm pin-1 orientation, cable labels, actual switch order and enabled-interface conflicts before wiring a new installation. Preserve your commissioned four-element configuration during updates; do not overwrite it with repository approval defaults or a two-sensor example.
 
 **First verify the exact sensor model and electrical behavior.** A powered sensor/module is not interchangeable with a passive contact. If it needs power or exposes a voltage output, stop: its datasheet, measured output and suitable 3.3 V interface must be reviewed before connecting it. Do not assume “JO-GL534” or a printed voltage/current rating establishes passive isolation.
 

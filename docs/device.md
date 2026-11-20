@@ -4,7 +4,7 @@
 
 Selected hardware is **Raspberry Pi 3 Model A+, 512 MB**, HDMI at **1280 × 720**, a Bluetooth keyboard and four passive JO-GL534 contacts. Selected software is **Raspberry Pi OS Lite Trixie 64-bit arm64**, its **64-bit system Python** and packaged PySide6/Qt Quick/QML, Segno, GPIO Zero and lgpio. A 64-bit kernel with 32-bit armhf userspace is **not supported**; `uname -m` alone is not an architecture check.
 
-**No Pi is available. No physical installation, package transaction, graphics test, power/memory measurement, keyboard reconnect or wiring verification has been performed. TH-02 physical acceptance remains blocked.** The tooling is an operator procedure, not proof of compatibility. Do not connect switches or run live mode on the strength of a package install or preflight report. Unknown pins, physical pin numbers and tested backend remain null in `config/device.json`; `hardware_verified` remains false. No generated app is installed in `output/app`.
+**No Pi is available. No physical installation, package transaction, graphics test, power/memory measurement, keyboard reconnect or wiring verification has been performed. TH-02 physical acceptance remains blocked.** The tooling is an operator procedure, not proof of compatibility. Do not connect switches or run live mode on the strength of a package install or preflight report. `config/device.json` records the user-supplied planned BCM/header mapping, not verified wiring; the tested backend remains null and `hardware_verified` remains false. No generated app is installed in `output/app`.
 
 ## Supported package selection and primary sources
 
@@ -147,7 +147,7 @@ On an image managed by NetworkManager, `sudo nmcli radio wifi off` is an alterna
 
 External dependencies are needed to obtain the OS/packages/project and during maintenance, **not for the exhibition interaction**: local fonts, images, JSON content, the bundled default QR and Segno generation for custom URLs stay offline; no AI/API/web server is involved. A visitor's phone needs connectivity to open `https://thirsty-app.netlify.app/`. Destination availability and phone acceptance remain unverified even if the local QR renders.
 
-## Sensor electrical gate and unresolved pin map
+## Sensor electrical gate and planned, unverified pin map
 
 With each JO-GL534 **disconnected from the Pi and all supplies**, a competent operator must verify passive two-wire continuity, isolation and wet/dry behavior using suitable measurement equipment. Supplied switch voltage/current ratings do not authorize applying those voltages to a GPIO. Keep water and exposed powered electronics separated. Never attach an active sensor output or 5 V to a Pi input.
 
@@ -180,7 +180,7 @@ Leave unknown values empty/null in the device record, not guessed. Store the act
 | Screen model, monitor sleep setting, blanking trial duration                     | Not recorded                                                                       |
 | Keyboard model/layout, pairing, reboot and sleep/wake reconnect                  | Not tested; record results and latency, omit address from public evidence          |
 | Supply rating, measured power behavior, HDMI/screen power arrangement            | Not measured; record `get_throttled`, temperature and any voltage-warning evidence |
-| BCM/header mapping S1–S4, passive-contact evidence, wet/dry values, lgpio access | All unknown/unverified; keep hardware config null/false                            |
+| BCM/header mapping S1–S4, passive-contact evidence, wet/dry values, lgpio access | Mapping planned; electrical behavior/access unverified; keep backend null and hardware_verified false |
 | Wi-Fi off/Bluetooth on; offline startup and typing after reboot                  | Not tested                                                                         |
 | Idle, active typing, scrolling and completion memory/swap                        | Not measured; collect process RSS/high-water/swap plus system free/swap over time  |
 | Long-run no OOM, no sustained swapping, stable responsiveness                    | Not tested; inventory alone is insufficient on 512 MB                              |

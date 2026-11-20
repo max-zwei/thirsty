@@ -29,7 +29,7 @@ Fill a private record with date, operator, instrument/tool, observed value, pass
 | `https://thirsty-app.netlify.app/` destination and phone QR scan from HDMI                                                 | **Destination and physical scan unverified / blocked for release.** Bundling the supplied QR does not establish either.                                                                           |
 | Recoverable full-card backup and spare-card restore trial                                                                | **Not performed / blocked for unattended operation.** Record image hash and restore result privately.                                                                                              |
 
-Repository `config/device.json` intentionally has four null `sensors.pins`, four null `physical_pins`, `pin_factory: null` and `hardware_verified: false`. Keep unresolved values that way. Its four `wet_values: 1` entries are provisional, not measurements. Do not set approval flags simply to make a refused launch proceed.
+Repository `config/device.json` records BCM inputs `[27, 22, 23, 24]` and header pins `[13, 15, 16, 18]`, lowest to highest. The operator confirmed passive switches and reported Pi input-only readings of all ones when dry, then a zero at each corresponding position when individually wet. `wet_values` is therefore `[0, 0, 0, 0]`. On 2026-11-20 the operator reported successful live operation through `artwork start` after switching the service from mock to live with `pin_factory: "lgpio"` and `hardware_verified: true` on the Pi. Repository defaults deliberately retain `pin_factory: null` and `hardware_verified: false`: approval is installation-specific. Preserve the commissioned Pi's configuration during updates and back it up privately. This live smoke test does not establish cold-boot, endurance or the remaining physical acceptance results.
 
 ## 1. Prepare the target and approve the display
 
@@ -76,16 +76,18 @@ Only a competent installer may commission the circuit. Remove visitors, close/co
 5. Before connecting the sensor harness to any input, a qualified installer must verify the source and every harness path with suitable measurements: actual rail referenced to Pi ground, correct ground identification, no continuity to the 5 V rail with supplies disconnected, and **no 5 V/external voltage on any line intended for GPIO**. Powered voltage measurement, if required, is a controlled dry-bench operation with the harness isolated from GPIO; use probes/fixtures that cannot bridge adjacent header pins. De-energize again before attaching or changing the harness. A rail label is not this verification. Record measured voltages and instrument, leaving them unmeasured until performed.
 6. Inspect correct pin orientation, insulated terminations, pull-down design, cable isolation and tank/electronics separation. For each lead, gently flex the intended installed cable route during isolated wet/dry tests; note intermittency, false transitions, contact bounce and strain. Repair hardware faults rather than hiding them with a longer filter.
 
-### Four-switch calibration record — no assignments or measurements supplied
+### Four-switch calibration record — operator-reported input readings
 
 Measure heights in millimetres from one recorded fixed tank datum, at the installed orientation. Record both rising-water actuation and falling-water release, not an assumed uniform spacing. Use private evidence references for detailed continuity/voltage readings and cable results.
 
+Cable labels: **S1 Lila/Weiß**, **S2 Gelb**, **S3 Blau**, **S4 Grün**. The shared contact supply is assigned to **3.3 V, physical pin 1**. The operator confirmed passive switches and reported raw dry `1`, wet `0` for each input; electrical safety, heights and cable trials still require their separate evidence.
+
 | Switch / array index | Physical order | BCM `pins`        | Header `physical_pins` | Dry contact / raw bit | Wet contact / raw bit | `wet_values`  | Actuation / release height | Cable behavior / evidence |
 | -------------------- | -------------- | ----------------- | ---------------------- | --------------------- | --------------------- | ------------- | -------------------------- | ------------------------- |
-| S1 / 0               | Lowest         | null — unverified | null — unverified      | Unmeasured            | Unmeasured            | 1 provisional | Unmeasured                 | Untested / blocked        |
-| S2 / 1               | Second         | null — unverified | null — unverified      | Unmeasured            | Unmeasured            | 1 provisional | Unmeasured                 | Untested / blocked        |
-| S3 / 2               | Third          | null — unverified | null — unverified      | Unmeasured            | Unmeasured            | 1 provisional | Unmeasured                 | Untested / blocked        |
-| S4 / 3               | Highest        | null — unverified | null — unverified      | Unmeasured            | Unmeasured            | 1 provisional | Unmeasured                 | Untested / blocked        |
+| S1 / 0               | Lowest         | 27                | 13                     | Raw 1, reported       | Raw 0, reported       | 0             | Unmeasured                 | Untested / blocked        |
+| S2 / 1               | Second         | 22                | 15                     | Raw 1, reported       | Raw 0, reported       | 0             | Unmeasured                 | Untested / blocked        |
+| S3 / 2               | Third          | 23                | 16                     | Raw 1, reported       | Raw 0, reported       | 0             | Unmeasured                 | Untested / blocked        |
+| S4 / 3               | Highest        | 24                | 18                     | Raw 1, reported       | Raw 0, reported       | 0             | Unmeasured                 | Untested / blocked        |
 
 In the specified circuit, closed is electrically raw 1 and open raw 0. **Wet is not necessarily closed.** Set each `wet_values[i]` to that switch's actually observed wet raw value. If wet opens the contact, use 0 for that entry; confirm its dry raw value is 1. Reordering a cable requires rechecking all corresponding array entries, not just swapping one polarity. Operational level is not a volume measurement: level 0 is below S1 and may leave residual water; level 4 means S4 wet, not permission to fill above a safe maximum.
 
